@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rein - Roblox Executor</title>
+    <meta name="description" content="Rein is a modern, fast Roblox executor with a clean interface and powerful scripting capabilities.">
+    <meta property="og:title" content="Rein - Roblox Executor">
+    <meta property="og:description" content="Modern. Fast. Clean. The executor built for speed.">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #080808; --bg-card: #111111; --bg-elevated: #161616;
+            --bg-border: #222222; --text: #ffffff; --text-secondary: #888888;
+            --text-muted: #555555; --accent: #ffffff; --accent-dim: rgba(255,255,255,0.08);
+            --accent-glow: rgba(255,255,255,0.15); --font: 'Inter', -apple-system, sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; line-height: 1.6; }
+        a { text-decoration: none; color: inherit; }
+
+        .noise { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; opacity: 0.03; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-repeat: repeat; background-size: 128px; }
+        .orb { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+        .orb-1 { width: 600px; height: 600px; background: rgba(255,255,255,0.03); top: -200px; left: -100px; }
+        .orb-2 { width: 500px; height: 500px; background: rgba(255,255,255,0.02); bottom: -200px; right: -100px; }
+
+        .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 16px 32px; backdrop-filter: blur(20px) saturate(180%); background: rgba(8,8,8,0.75); border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .nav-logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+        .logo-r { color: var(--accent); font-weight: 800; }
+        .nav-links { display: flex; gap: 32px; }
+        .nav-links a { font-size: 14px; color: var(--text-secondary); transition: color 0.15s ease; font-weight: 500; }
+        .nav-links a:hover { color: var(--text); }
+        .nav-cta { font-size: 13px; font-weight: 600; padding: 8px 20px; background: var(--accent); color: var(--bg); border-radius: 8px; transition: opacity 0.15s ease; }
+        .nav-cta:hover { opacity: 0.85; }
+
+        .hero { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 120px 32px 60px; }
+        .hero-badge { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-secondary); padding: 6px 16px; border: 1px solid var(--bg-border); border-radius: 100px; margin-bottom: 32px; animation: fadeInUp 0.6s ease; }
+        .hero-title { font-size: clamp(48px, 8vw, 88px); font-weight: 800; letter-spacing: -3px; line-height: 1.05; margin-bottom: 24px; animation: fadeInUp 0.6s ease 0.1s both; }
+        .hero-accent { background: linear-gradient(135deg, #ffffff 0%, #888888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-subtitle { font-size: 18px; color: var(--text-secondary); max-width: 500px; margin-bottom: 40px; line-height: 1.7; animation: fadeInUp 0.6s ease 0.2s both; }
+        .hero-actions { display: flex; gap: 12px; animation: fadeInUp 0.6s ease 0.3s both; }
+
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: var(--font); cursor: pointer; transition: all 0.15s ease; border: none; }
+        .btn-primary { background: var(--accent); color: var(--bg); }
+        .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+        .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--bg-border); }
+        .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); transform: translateY(-1px); }
+        .btn-lg { padding: 16px 36px; font-size: 16px; border-radius: 12px; }
+
+        .hero-visual { margin-top: 60px; width: 100%; max-width: 700px; animation: fadeInUp 0.8s ease 0.4s both; }
+        .hero-window { background: #0d0d0d; border: 1px solid #222; border-radius: 12px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05); }
+        .hero-titlebar { display: flex; align-items: center; padding: 12px 16px; background: #111; border-bottom: 1px solid #1a1a1a; }
+        .titlebar-dots { display: flex; gap: 6px; }
+        .titlebar-dots span { width: 10px; height: 10px; border-radius: 50%; background: #333; }
+        .titlebar-title { flex: 1; text-align: center; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .titlebar-spacer { width: 46px; }
+        .hero-editor { padding: 20px 24px; font-family: var(--mono); font-size: 13px; line-height: 1.8; position: relative; }
+        .editor-line { white-space: nowrap; color: #ccc; }
+        .line-num { color: #444; display: inline-block; width: 28px; margin-right: 16px; user-select: none; }
+        .kw { color: #fff; font-weight: 500; }
+        .str { color: #98c379; }
+        .num { color: #d19a66; }
+        .cmt { color: #555; font-style: italic; }
+        .editor-cursor { display: inline-block; width: 2px; height: 16px; background: var(--accent); animation: blink 1s step-end infinite; vertical-align: text-bottom; margin-left: 2px; }
+
+        .stats { position: relative; z-index: 1; padding: 40px 32px; border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; }
+        .stats-inner { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 48px; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; font-family: var(--mono); }
+        .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        .stat-divider { width: 1px; height: 40px; background: #222; }
+
+        .section-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+        .section-label { font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+        .section-title { font-size: clamp(36px, 5vw, 52px); font-weight: 800; letter-spacing: -2px; margin-bottom: 48px; }
+
+        .features { position: relative; z-index: 1; padding: 120px 0; }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #1a1a1a; border: 1px solid #1a1a1a; border-radius: 16px; overflow: hidden; }
+        .feature-card { padding: 40px 32px; background: var(--bg); transition: background 0.2s ease; }
+        .feature-card:hover { background: #0e0e0e; }
+        .feature-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: var(--accent-dim); color: var(--text); margin-bottom: 20px; }
+        .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.3px; }
+        .feature-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+        .download { position: relative; z-index: 1; padding: 80px 0 120px; }
+        .download-card { text-align: center; padding: 80px 40px; background: var(--bg-card); border: 1px solid #1a1a1a; border-radius: 20px; }
+        .download-card h2 { font-size: 40px; font-weight: 800; letter-spacing: -2px; margin-bottom: 12px; }
+        .download-card > p { font-size: 16px; color: var(--text-secondary); margin-bottom: 24px; }
+        .download-meta { display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 13px; color: var(--text-muted); font-family: var(--mono); margin-bottom: 32px; }
+        .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text-muted); display: inline-block; }
+        .download-sha { margin-top: 20px; font-size: 12px; color: var(--text-muted); font-family: var(--mono); }
+        .download-sha code { background: #1a1a1a; padding: 2px 8px; border-radius: 4px; }
+
+        .changelog { position: relative; z-index: 1; padding: 80px 0 120px; border-top: 1px solid #1a1a1a; }
+        .changelog-list { display: flex; flex-direction: column; gap: 1px; }
+        .changelog-item { background: var(--bg-card); border: 1px solid #1a1a1a; border-radius: 12px; padding: 32px; display: flex; gap: 32px; align-items: flex-start; }
+        .changelog-version { font-family: var(--mono); font-size: 16px; font-weight: 700; min-width: 80px; color: var(--accent); }
+        .changelog-date { font-size: 13px; color: var(--text-muted); min-width: 120px; font-family: var(--mono); }
+        .changelog-content ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .changelog-content li { font-size: 14px; color: var(--text-secondary); }
+        .changelog-content li::before { content: '—'; margin-right: 8px; color: var(--text-muted); }
+
+        .footer { position: relative; z-index: 1; padding: 40px 32px; border-top: 1px solid #1a1a1a; }
+        .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .footer-logo { font-size: 18px; font-weight: 700; }
+        .footer-links { display: flex; gap: 24px; }
+        .footer-links a { font-size: 13px; color: var(--text-muted); transition: color 0.15s ease; }
+        .footer-links a:hover { color: var(--text); }
+        .footer-copy { font-size: 12px; color: var(--text-muted); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero-title { letter-spacing: -2px; }
+            .hero-actions { flex-direction: column; width: 100%; max-width: 300px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .stats-inner { flex-wrap: wrap; gap: 24px; }
+            .stat-divider { display: none; }
+            .stat { flex: 1; min-width: 120px; }
+            .changelog-item { flex-direction: column; gap: 8px; }
+            .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo"><span class="logo-r">R</span>ein</a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#scripts">Scripts</a>
+                <a href="#changelog">Changelog</a>
+            </div>
+            <a href="https://gofile.io/d/PCC9wXDm" class="nav-cta" target="_blank">Download</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-badge">v1.0.0 &mdash; Now Available</div>
+        <h1 class="hero-title">The executor<br>built for <span class="hero-accent">speed</span>.</h1>
+        <p class="hero-subtitle">Modern interface. Instant execution. Zero bloat.<br>Rein is built from the ground up for performance.</p>
+        <div class="hero-actions" style="justify-content: center;">
+            <a href="https://gofile.io/d/PCC9wXDm" class="btn btn-primary" target="_blank">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Rein
+            </a>
+
+        </div>
+        <div class="hero-visual">
+            <div class="hero-window">
+                <div class="hero-titlebar">
+                    <div class="titlebar-dots"><span></span><span></span><span></span></div>
+                    <span class="titlebar-title">Rein</span>
+                    <div class="titlebar-spacer"></div>
+                </div>
+                <div class="hero-editor">
+                    <div class="editor-line"><span class="line-num">1</span><span class="kw">local</span> player = game.Players.LocalPlayer</div>
+                    <div class="editor-line"><span class="line-num">2</span><span class="kw">local</span> char = player.Character <span class="kw">or</span> player.CharacterAdded:Wait()</div>
+                    <div class="editor-line"><span class="line-num">3</span></div>
+                    <div class="editor-line"><span class="line-num">4</span><span class="kw">local</span> hrp = char:WaitForChild(<span class="str">"HumanoidRootPart"</span>)</div>
+                    <div class="editor-line"><span class="line-num">5</span>hrp.Velocity = Vector3.new(<span class="num">0</span>, <span class="num">50</span>, <span class="num">0</span>)</div>
+                    <div class="editor-line"><span class="line-num">6</span></div>
+                    <div class="editor-line"><span class="line-num">7</span><span class="cmt">-- Rein executor</span></div>
+                    <div class="editor-line"><span class="line-num">8</span>print(<span class="str">"Injected successfully!"</span>)</div>
+                    <div class="editor-cursor"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stats-inner">
+            <div class="stat"><div class="stat-value">&lt;50ms</div><div class="stat-label">Injection Time</div></div>
+            <div class="stat-divider"></div>
+            <div class="stat"><div class="stat-value">99%</div><div class="stat-label">Script Compatibility</div></div>
+            <div class="stat-divider"></div>
+            <div class="stat"><div class="stat-value">Free</div><div class="stat-label">No Keys, No Ads</div></div>
+            <div class="stat-divider"></div>
+            <div class="stat"><div class="stat-value">x64</div><div class="stat-label">Native Performance</div></div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="section-inner">
+            <div class="section-label">Features</div>
+            <h2 class="section-title">Built different.</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+                    <h3>Lightning Fast</h3>
+                    <p>Sub-50ms injection and near-instant script execution. No delays, no lag.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+                    <h3>Monaco Editor</h3>
+                    <p>Full-featured code editor with syntax highlighting, autocomplete, and multiple themes.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+                    <h3>Script Hub</h3>
+                    <p>Built-in script library with hundreds of community scripts. Browse, search, and execute.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                    <h3>Auto Attach</h3>
+                    <p>Detects Roblox automatically and injects when ready. Set it and forget it.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+                    <h3>Multi-Tab</h3>
+                    <p>Work with multiple scripts at once. Tabbed editor with instant switching.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+                    <h3>Customizable</h3>
+                    <p>Accent colors, syntax themes, and layout options. Make it yours.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="download" id="download">
+        <div class="section-inner">
+            <div class="download-card">
+                <h2>Ready to execute.</h2>
+                <p>Download Rein for free. No keys. No ads. No BS.</p>
+                <div class="download-meta">
+                    <span>v1.0.0</span><span class="dot"></span><span>Windows x64</span><span class="dot"></span><span>~15 MB</span>
+                </div>
+                <a href="https://gofile.io/d/PCC9wXDm" class="btn btn-primary btn-lg" target="_blank">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download Rein
+                </a>
+                <div class="download-sha">SHA-256: <code>Coming soon</code></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="changelog" id="changelog">
+        <div class="section-inner">
+            <div class="section-label">Changelog</div>
+            <h2 class="section-title">What's new.</h2>
+            <div class="changelog-list">
+                <div class="changelog-item">
+                    <div class="changelog-version">v1.0.0</div>
+                    <div class="changelog-date">August 2025</div>
+                    <div class="changelog-content">
+                        <ul>
+                            <li>Initial release</li>
+                            <li>Monaco editor with syntax highlighting</li>
+                            <li>Built-in Script Hub</li>
+                            <li>QuorumAPI integration</li>
+                            <li>Auto attach support</li>
+                            <li>Multi-tab editor</li>
+                            <li>Executor console</li>
+                            <li>Customizable themes and accent colors</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-logo"><span class="logo-r">R</span>ein</div>
+            <div class="footer-links">
+                <a href="#features">Features</a>
+                <a href="#download">Download</a>
+                <a href="#changelog">Changelog</a>
+            </div>
+            <div class="footer-copy">&copy; 2025 Rein. For educational purposes only.</div>
+        </div>
+    </footer>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+        document.querySelectorAll('.feature-card, .download-card, .changelog-item, .stat').forEach(el => {
+            el.classList.add('reveal');
+            observer.observe(el);
+        });
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+        const nav = document.querySelector('.nav');
+        window.addEventListener('scroll', () => {
+            nav.style.borderBottomColor = window.scrollY > 50 ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)';
+        });
+        window.addEventListener('scroll', () => {
+            const y = window.scrollY;
+            const o1 = document.querySelector('.orb-1');
+            const o2 = document.querySelector('.orb-2');
+            if (o1) o1.style.transform = `translateY(${y * 0.1}px)`;
+            if (o2) o2.style.transform = `translateY(${y * -0.08}px)`;
+        });
+    </script>
+</body>
+</html>
